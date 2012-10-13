@@ -21,7 +21,7 @@ class MetricItem(models.Model):
     date_up = models.DateField(default=date.today)
 
     def __unicode__(self):
-        '%d %s by %s at %s' % (self.count, self.metric.name, self.user, self.date_up)
+        return '%d %s by %s at %s' % (self.count, self.metric.name, self.user, self.date_up)
 
 
 class MetricDay(models.Model):
