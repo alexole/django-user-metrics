@@ -20,7 +20,8 @@ class Command(NoArgsCommand):
             day, create = MetricDay.objects.get_or_create(
                 metric = item.metric,
                 user = item.user,
-                date_up = item.date_up
+                date_up = item.date_up,
+                user_object_id = item.user_object_id
             )
 
             day.count = day.count + item.count
@@ -31,7 +32,8 @@ class Command(NoArgsCommand):
             week, create = MetricWeek.objects.get_or_create(
                 metric = item.metric,
                 user = item.user,
-                date_up = week_date
+                date_up = week_date,
+                user_object_id = item.user_object_id
             )
 
             week.count = week.count + item.count

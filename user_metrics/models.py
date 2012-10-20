@@ -17,11 +17,13 @@ class MetricItem(models.Model):
     metric = models.ForeignKey(Metric)
     user = models.ForeignKey(User)
 
+    user_object_id = models.IntegerField(default=0)
+
     count = models.IntegerField(default=1)
     date_up = models.DateField(default=date.today)
 
     def __unicode__(self):
-        return '%d %s by %s at %s' % (self.count, self.metric.name, self.user, self.date_up)
+        return '%d %s by %s at %s, object: %s' % (self.count, self.metric.name, self.user, self.date_up, self.user_object_id)
 
 
 class MetricDay(models.Model):
@@ -29,6 +31,7 @@ class MetricDay(models.Model):
     """
     metric = models.ForeignKey(Metric)
     user = models.ForeignKey(User)
+    user_object_id = models.IntegerField(default=0)
 
     count = models.IntegerField(default=0)
     date_up = models.DateField(default=date.today)
@@ -39,6 +42,7 @@ class MetricWeek(models.Model):
     """
     metric = models.ForeignKey(Metric)
     user = models.ForeignKey(User)
+    user_object_id = models.IntegerField(default=0)
 
     count = models.IntegerField(default=0)
     date_up = models.DateField(default=date.today)
