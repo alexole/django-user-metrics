@@ -25,6 +25,10 @@ class Command(NoArgsCommand):
             )
 
             day.count = day.count + item.count
+
+            if item.last_visit is None or item.last_visit.date == datetime.date.today():
+                day.unique_count = day.unique_count + item.count
+
             day.save()
 
             # Weekly Aggregation
@@ -37,6 +41,10 @@ class Command(NoArgsCommand):
             )
 
             week.count = week.count + item.count
+
+            if item.last_visit is None or (item.last_visit.date >= week_date and item.last_visit.date < week_date + datetime.timedelta(weeks=1)):
+                day.unique_count = day.unique_count + item.count
+
             week.save()
 
         # Kill off our items
