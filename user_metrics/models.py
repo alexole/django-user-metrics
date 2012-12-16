@@ -23,7 +23,7 @@ class MetricItem(models.Model):
     count = models.IntegerField(default=1)
     date_up = models.DateField(default=date.today)
 
-    last_visit = models.DateField(default=datetime.now, null=True)
+    last_visit = models.DateField(null=True)
 
     def __unicode__(self):
         return '%d %s by %s at %s, object: %s' % (self.count, self.metric.name, self.user, self.date_up, self.user_object_id)

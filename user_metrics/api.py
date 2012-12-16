@@ -3,6 +3,9 @@ from user_metrics.models import Metric, MetricItem
 import datetime
 import dateutil
 
+def convert_naivy_dt(dt, tz_from=None, tz_to=None):
+    return dt.replace(tzinfo=tz_from).astimezone(tz_to).replace(tzinfo=None)
+
 # TODO: keep last visit date in DB for authenticated users
 def put_metric(slug, user, user_object_id=0, count=1, request=None, response=None, cookie_domain=None, **kwargs):
     """ Increment a metric by a given user """
@@ -15,13 +18,13 @@ def put_metric(slug, user, user_object_id=0, count=1, request=None, response=Non
     cookie_name = 'x-Arendorium-{0}'.format(slug)
 
     if response is not None:
-        utcnow = datetime.date.utcnow()
+        utcnow = datetime.datetime.utcnow()
         utcnow_str = utcnow.strftime('%d-%b-%Y %H:%M:%S')
 
         response.set_cookie(
                 cookie_name,
                 value=utcnow_str,
-                expires=utcnow + datetime.timedelta(years=1),
+                expires=utcnow.replace(year=utcnow.year+1),
                 domain=cookie_domain)
 
     last_visit = None
@@ -30,8 +33,11 @@ def put_metric(slug, user, user_object_id=0, count=1, request=None, response=Non
         last_visit_str = request.COOKIES.get(cookie_name, None)
         if last_visit_str is not None:
             try:
-                last_visit = dateutil.tz.tzlocal().fromutc(datetime.strptime(last_visit_str, '%d-%b-%Y %H:%M:%S'))
-            except ValueError:
+                last_visit = convert_naivy_dt(
+                        datetime.datetime.strptime(last_visit_str, '%d-%b-%Y %H:%M:%S'),
+                        tz_from=dateutil.tz.tzutc(),
+                        tz_to=dateutil.tz.tzlocal())
+            except ValueError, e:
                 pass
 
     MetricItem.objects.create(
