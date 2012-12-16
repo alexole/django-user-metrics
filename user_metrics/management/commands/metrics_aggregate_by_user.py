@@ -26,7 +26,7 @@ class Command(NoArgsCommand):
 
             day.count = day.count + item.count
 
-            if item.last_visit is None or item.last_visit.date == datetime.date.today():
+            if item.last_visit is None or item.last_visit != datetime.date.today():
                 day.unique_count = day.unique_count + item.count
 
             day.save()
@@ -42,8 +42,8 @@ class Command(NoArgsCommand):
 
             week.count = week.count + item.count
 
-            if item.last_visit is None or (item.last_visit.date >= week_date and item.last_visit.date < week_date + datetime.timedelta(weeks=1)):
-                day.unique_count = day.unique_count + item.count
+            if item.last_visit is None or item.last_visit < week_date or item.last_visit >= (week_date + datetime.timedelta(weeks=1)):
+                week.unique_count = week.unique_count + item.count
 
             week.save()
 
