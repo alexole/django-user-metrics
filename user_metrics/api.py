@@ -15,7 +15,7 @@ def put_metric(slug, user, user_object_id=0, count=1, request=None, response=Non
     except Metric.DoesNotExist:
         metric = Metric.objects.create(slug=slug, name=slug)
 
-    cookie_name = 'x-Arendorium-{0}'.format(slug)
+    cookie_name = 'x-Arendorium-{0}-{1}-{2}'.format(slug, user.id, user_object_id)
 
     if response is not None:
         utcnow = datetime.datetime.utcnow()
