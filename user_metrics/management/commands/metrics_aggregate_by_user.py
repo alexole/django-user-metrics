@@ -1,8 +1,8 @@
-import datetime
-from django.core.management.base import NoArgsCommand
+from user_metrics.models import MetricItem, MetricDay
 
-from user_metrics.models import Metric, MetricItem, MetricDay, MetricWeek
-from user_metrics.utils import week_for_date
+from django.core.management.base import NoArgsCommand
+from django.db.models.aggregates import Count
+import datetime
 
 class Command(NoArgsCommand):
     help = "Aggregate Application Metrics"
@@ -12,40 +12,22 @@ class Command(NoArgsCommand):
     def handle_noargs(self, **options):
         """ Aggregate Metrics by User """
 
-        # Aggregate Items
-        items = MetricItem.objects.all()
+        items = MetricItem.objects.extra(
+                select={'day': "DATE_TRUNC('day', visit_time)"}
+            ).values('day', 'metric', 'user', 'user_object_id').order_by().annotate(
+                    count=Count('id'), unique_count=Count('visitor_id', distinct=True))
 
         for item in items:
-            # Daily Aggregation
             day, create = MetricDay.objects.get_or_create(
-                metric = item.metric,
-                user = item.user,
-                date_up = item.date_up,
-                user_object_id = item.user_object_id
+                date_up = item['day'].date(),
+                metric_id = item['metric'],
+                user_id = item['user'],
+                user_object_id = item['user_object_id']
             )
 
-            day.count = day.count + item.count
-
-            if item.last_visit is None or item.last_visit != datetime.date.today():
-                day.unique_count = day.unique_count + item.count
+            day.count = item['count']
+            day.unique_count = item['unique_count']
 
             day.save()
 
-            # Weekly Aggregation
-            week_date = week_for_date(item.date_up)
-            week, create = MetricWeek.objects.get_or_create(
-                metric = item.metric,
-                user = item.user,
-                date_up = week_date,
-                user_object_id = item.user_object_id
-            )
-
-            week.count = week.count + item.count
-
-            if item.last_visit is None or item.last_visit < week_date or item.last_visit >= (week_date + datetime.timedelta(weeks=1)):
-                week.unique_count = week.unique_count + item.count
-
-            week.save()
-
-        # Kill off our items
-        items.delete()
+        MetricItem.objects.filter(visit_time__lt=datetime.date.today()).delete()

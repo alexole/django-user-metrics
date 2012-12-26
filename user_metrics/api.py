@@ -1,13 +1,13 @@
 from user_metrics.models import Metric, MetricItem
+from user_metrics.utils import get_visitor_hash, create_visitor_id
+
+from django.http import HttpResponseRedirect
 
 import datetime
-import dateutil
 
-def convert_naivy_dt(dt, tz_from=None, tz_to=None):
-    return dt.replace(tzinfo=tz_from).astimezone(tz_to).replace(tzinfo=None)
+VISITOR_ID_COOKIE = 'x-Arendorium-ID'
 
-# TODO: keep last visit date in DB for authenticated users
-def put_metric(slug, user, user_object_id=0, count=1, request=None, response=None, cookie_domain=None, **kwargs):
+def put_metric(slug, user, user_object_id=0, request=None, response=None, cookie_domain=None, **kwargs):
     """ Increment a metric by a given user """
 
     try:
@@ -15,35 +15,31 @@ def put_metric(slug, user, user_object_id=0, count=1, request=None, response=Non
     except Metric.DoesNotExist:
         metric = Metric.objects.create(slug=slug, name=slug)
 
-    cookie_name = 'x-Arendorium-{0}'.format(slug)
+    visitor_hash = None
+    visitor_id = None
 
-    if response is not None:
-        utcnow = datetime.datetime.utcnow()
-        utcnow_str = utcnow.strftime('%d-%b-%Y %H:%M:%S')
+    if request is not None and response is not None:
+        # NOTE: expiring old cookies; the following loop can be removed in future
+        for name, value in request.COOKIES.iteritems():
+            if name.startswith('x-Arendorium-') and name != VISITOR_ID_COOKIE:
+                response.set_cookie(name, '', expires=datetime.date(2010, 1, 1), domain=cookie_domain)
 
-        response.set_cookie(
-                cookie_name,
-                value=utcnow_str,
-                expires=utcnow.replace(year=utcnow.year+1),
-                domain=cookie_domain)
+        visitor_hash = get_visitor_hash(request)
 
-    last_visit = None
+        visitor_id = request.COOKIES.get(VISITOR_ID_COOKIE, None)
+        if visitor_id is None:
+            visitor_id = create_visitor_id(request, visitor_hash)
+            utcnow = datetime.datetime.utcnow()
+            expires = utcnow.replace(year=utcnow.year+1)
 
-    if request is not None:
-        last_visit_str = request.COOKIES.get(cookie_name, None)
-        if last_visit_str is not None:
-            try:
-                last_visit = convert_naivy_dt(
-                        datetime.datetime.strptime(last_visit_str, '%d-%b-%Y %H:%M:%S'),
-                        tz_from=dateutil.tz.tzutc(),
-                        tz_to=dateutil.tz.tzlocal())
-            except ValueError, e:
-                pass
+            response.set_cookie(VISITOR_ID_COOKIE, value=visitor_id, expires=expires, domain=cookie_domain)
 
     MetricItem.objects.create(
         metric = metric,
         user = user,
         user_object_id = user_object_id,
-        count = count,
-        last_visit = last_visit
+        visitor_hash = visitor_hash,
+        visitor_id = visitor_id
     )
+
+    return response

@@ -1,5 +1,5 @@
 import datetime
-from datetime import date
+
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -20,13 +20,18 @@ class MetricItem(models.Model):
 
     user_object_id = models.IntegerField(default=0)
 
-    count = models.IntegerField(default=1)
-    date_up = models.DateField(default=date.today)
-
-    last_visit = models.DateField(null=True)
+    visit_time = models.DateTimeField(default=datetime.datetime.now)
+    visitor_hash = models.CharField(max_length=22, null=True)
+    visitor_id = models.CharField(max_length=22, null=True)
 
     def __unicode__(self):
-        return '%d %s by %s at %s, object: %s' % (self.count, self.metric.name, self.user, self.date_up, self.user_object_id)
+        return '%s by %s at %s, object: %s, hash: %s, id: %s' % (
+                self.metric.name,
+                self.user,
+                self.timestamp,
+                self.user_object_id,
+                self.visitor_hash,
+                self.visitor_id)
 
 
 class MetricDay(models.Model):
@@ -38,16 +43,4 @@ class MetricDay(models.Model):
 
     count = models.IntegerField(default=0)
     unique_count = models.IntegerField(default=0)
-    date_up = models.DateField(default=date.today)
-
-
-class MetricWeek(models.Model):
-    """ represent aggregation of metric weekly
-    """
-    metric = models.ForeignKey(Metric)
-    user = models.ForeignKey(User)
-    user_object_id = models.IntegerField(default=0)
-
-    count = models.IntegerField(default=0)
-    unique_count = models.IntegerField(default=0)
-    date_up = models.DateField(default=date.today)
+    date_up = models.DateField(default=datetime.date.today)
