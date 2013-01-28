@@ -28,7 +28,7 @@ class MetricItem(models.Model):
         return '%s by %s at %s, object: %s, hash: %s, id: %s' % (
                 self.metric.name,
                 self.user,
-                self.timestamp,
+                self.visit_time,
                 self.user_object_id,
                 self.visitor_hash,
                 self.visitor_id)
