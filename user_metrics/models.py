@@ -15,8 +15,8 @@ class Metric(models.Model):
 class MetricItem(models.Model):
     """ more atomic representation of a metric by each user
     """
-    metric = models.ForeignKey(Metric)
-    user = models.ForeignKey(User)
+    metric = models.ForeignKey(Metric, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     user_object_id = models.IntegerField(default=0)
 
@@ -37,8 +37,8 @@ class MetricItem(models.Model):
 class MetricDay(models.Model):
     """ represent aggregation of metrics daily
     """
-    metric = models.ForeignKey(Metric)
-    user = models.ForeignKey(User)
+    metric = models.ForeignKey(Metric, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     user_object_id = models.IntegerField(default=0)
 
     count = models.IntegerField(default=0)
